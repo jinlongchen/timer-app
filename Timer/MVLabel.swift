@@ -14,7 +14,8 @@ class MVLabel: NSTextView {
   }
 
   private func commonInit() {
-    self.backgroundColor = NSColor.clear
+      self.backgroundColor = NSColor.clear
+//      self.backgroundColor = NSColor.red
     self.isSelectable = false
   }
 

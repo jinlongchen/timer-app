@@ -161,7 +161,9 @@ class MVClockView: NSControl {
   }
 
   private func updateClockFaceView(highlighted: Bool = false) {
-    clockFaceView.update(highlighted: highlighted)
+      if clockFaceView != nil {
+          clockFaceView.update(highlighted: highlighted)
+      }
   }
 
   private func center(_ view: NSView) {
@@ -174,18 +176,20 @@ class MVClockView: NSControl {
   private func layoutSubviews() {
     let angle = -progress * .pi * 2 + .pi / 2
 
-    // swiftlint:disable identifier_name
-    let x = self.bounds.width / 2 + cos(angle) * progressView.bounds.width / 2
-    let y = self.bounds.height / 2 + sin(angle) * progressView.bounds.height / 2
-    // swiftlint:enable identifier_name
+      if (progressView != nil) {
+          // swiftlint:disable identifier_name
+          let x = self.bounds.width / 2 + cos(angle) * progressView.bounds.width / 2
+          let y = self.bounds.height / 2 + sin(angle) * progressView.bounds.height / 2
+          // swiftlint:enable identifier_name
 
-    let point = NSPoint(x: x - arrowView.bounds.width / 2, y: y - arrowView.bounds.height / 2)
-    var frame = arrowView.frame
-    frame.origin = point
-    arrowView.frame = frame
+          let point = NSPoint(x: x - arrowView.bounds.width / 2, y: y - arrowView.bounds.height / 2)
+          var frame = arrowView.frame
+          frame.origin = point
+          arrowView.frame = frame
 
-    self.progressView.progress = progress
-    self.arrowView.progress = progress
+          self.progressView.progress = progress
+          self.arrowView.progress = progress
+      }
   }
 
   @objc func handleArrowControl(_ object: NSNumber) {
@@ -210,9 +214,12 @@ class MVClockView: NSControl {
     self.start()
   }
 
-  func handleClick() {
-    if self.timer == nil && self.seconds > 0 {
-      self.updateTimerTime()
+  func  handleClick() {
+    if self.timer == nil {
+        if self.timerTime == nil {
+            self.timerTime = Date()
+        }
+      //self.updateTimerTime()
       self.start()
     } else {
       self.paused = true
@@ -225,32 +232,39 @@ class MVClockView: NSControl {
     NSAnimationContext.runAnimationGroup({ ctx in
       ctx.duration = 0.2
       ctx.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
-      self.pauseIconImageView.animator().alphaValue = showPauseIcon ? 1 : 0
-      self.timerTimeLabel.animator().alphaValue = showPauseIcon ? 0 : 1
+        if self.pauseIconImageView != nil {
+            self.pauseIconImageView.animator().alphaValue = showPauseIcon ? 1 : 0
+        }
+        if self.timerTimeLabel != nil {
+            self.timerTimeLabel.animator().alphaValue = showPauseIcon ? 0 : 1
+        }
     }, completionHandler: nil)
   }
 
-  var didDrag: Bool = false
+//  var didDrag: Bool = false
 
   override func mouseDown(with event: NSEvent) {
-    self.didDrag = false
-    self.updateClockFaceView(highlighted: true)
+      print("mouseDown")
+//    self.didDrag = false
+//    self.updateClockFaceView(highlighted: true)
 
-    self.nextResponder?.mouseDown(with: event) // Allow window to also track the event (so user can drag window)
+//    self.nextResponder?.mouseDown(with: event) // Allow window to also track the event (so user can drag window)
   }
 
-  override func mouseDragged(with event: NSEvent) {
-    if !self.didDrag {
-      self.didDrag = true
-      self.updateClockFaceView()
-    }
-  }
+//  override func mouseDragged(with event: NSEvent) {
+//    if !self.didDrag {
+//      self.didDrag = true
+//      self.updateClockFaceView()
+//    }
+//  }
 
   override func mouseUp(with event: NSEvent) {
     let point = self.convert(event.locationInWindow, from: nil)
-    if self.hitTest(point) == self && !self.didDrag {
-      self.handleClick()
-    }
+    if self.hitTest(point) == self {
+//      if !self.didDrag {
+        print("mouseUp")
+          self.handleClick()
+      }
     self.updateClockFaceView()
   }
 
@@ -340,6 +354,9 @@ class MVClockView: NSControl {
   }
 
   private func updateLabels() {
+      if minutesLabel == nil {
+          return
+      }
     var suffixWidth: CGFloat = 0
 
     if self.seconds < 60 {
@@ -384,6 +401,9 @@ class MVClockView: NSControl {
   }
 
   private func updateTimeLabel() {
+      if timerTimeLabel == nil {
+          return
+      }
     let formatter = DateFormatter()
     formatter.dateFormat = DateFormatter.dateFormat(fromTemplate: "jj:mm", options: 0, locale: Locale.current)
     let timeString = formatter.string(from: self.timerTime ?? Date())
@@ -402,8 +422,8 @@ class MVClockView: NSControl {
   }
 
   private func start() {
-    guard self.seconds > 0  else { return }
-    self.lastTimerSeconds = self.seconds
+//    guard self.seconds > 0  else { return }
+//    self.lastTimerSeconds = self.seconds
 
     self.paused = false
     self.stop()
@@ -435,7 +455,7 @@ class MVClockView: NSControl {
   @objc func tick() {
     guard let timerTime = self.timerTime  else { return }
 
-    let secondsRemaining = CGFloat(timerTime.timeIntervalSinceNow)
+    let secondsRemaining = -CGFloat(timerTime.timeIntervalSinceNow)
 
     // Round the seconds displayed on the clock face
     self.seconds = max(0, round(secondsRemaining))
@@ -486,11 +506,12 @@ class MVClockView: NSControl {
     if view == arrowView {
       return view
     }
-    let path = NSBezierPath(ovalIn: NSRect(x: 21, y: 21, width: 108, height: 108))
-    if path.contains(aPoint) && self.seconds > 0 {
       return self
-    }
-    return nil
+//    let path = NSBezierPath(ovalIn: NSRect(x: 21, y: 21, width: 108, height: 108))
+//    if path.contains(aPoint) && self.seconds > 0 {
+//      return self
+//    }
+//    return nil
   }
 
   private let scaleOriginal: CGFloat = 6
@@ -552,7 +573,8 @@ class MVClockProgressView: NSView {
   }
 
   override func draw(_ dirtyRect: NSRect) {
-    NSColor(srgbRed: 0.7255, green: 0.7255, blue: 0.7255, alpha: 0.15).setFill()
+      NSColor(srgbRed: 0.7255, green: 0.7255, blue: 0.7255, alpha: 0.15).setFill()
+//      NSColor(srgbRed: 1, green: 0.7255, blue: 0.7255, alpha: 0.85).setFill()
     NSBezierPath(ovalIn: self.bounds).fill()
 
     drawArc(progress)
@@ -560,7 +582,7 @@ class MVClockProgressView: NSView {
 
   private func drawArc(_ progress: CGFloat) {
     let center = NSPoint(x: self.bounds.width / 2, y: self.bounds.height / 2)
-    let windowHasFocus = self.window?.isKeyWindow ?? false
+    //let windowHasFocus = self.window?.isKeyWindow ?? false
 
     let path = NSBezierPath()
     path.move(to: NSPoint(x: self.bounds.width / 2, y: self.bounds.height))
@@ -583,7 +605,9 @@ class MVClockProgressView: NSView {
     transform.translate(x: -center.x, y: -center.y)
     (transform as NSAffineTransform).concat()
 
-    let image = NSImage(named: windowHasFocus ? "progress" : "progress-unfocus")
+//      let image = NSImage(named: windowHasFocus ? "progress" : "progress-unfocus")
+      let image = NSImage(named: "progress")
+
     image?.draw(in: self.bounds)
 
     ctx?.restoreGraphicsState()
@@ -646,8 +670,18 @@ class MVClockArrowView: NSControl {
 
     path.transform(using: transform)
 
-    let windowHasFocus = self.window?.isKeyWindow ?? false
-    if windowHasFocus {
+   // let windowHasFocus = self.window?.isKeyWindow ?? false
+//    if windowHasFocus {
+//      let ratio: CGFloat = 0.5
+//      NSColor(
+//        srgbRed: 0.1734 + ratio * (0.2235 - 0.1734),
+//        green: 0.5284 + ratio * (0.5686 - 0.5284),
+//        blue: 0.9448 + ratio * (0.9882 - 0.9448),
+//        alpha: 1.0
+//      ).setFill()
+//    } else {
+//      NSColor(srgbRed: 0.5529, green: 0.6275, blue: 0.7216, alpha: 1.0).setFill()
+//    }
       let ratio: CGFloat = 0.5
       NSColor(
         srgbRed: 0.1734 + ratio * (0.2235 - 0.1734),
@@ -655,84 +689,86 @@ class MVClockArrowView: NSControl {
         blue: 0.9448 + ratio * (0.9882 - 0.9448),
         alpha: 1.0
       ).setFill()
-    } else {
-      NSColor(srgbRed: 0.5529, green: 0.6275, blue: 0.7216, alpha: 1.0).setFill()
-    }
     path.fill()
   }
 
-  override func mouseDown(with theEvent: NSEvent) {
-    var isDragging = false
-    var isTracking = true
-    var event: NSEvent = theEvent
-
-    while isTracking {
-      switch event.type {
-      case .leftMouseUp:
-        isTracking = false
-        self.handleUp(event)
-        break
-
-      case .leftMouseDragged:
-        if isDragging {
-          self.handleDragged(event)
-        } else {
-          isDragging = true
-        }
-        break
-
-      default:
-        break
-      }
-
-      if isTracking {
-        let anEvent = self.window?.nextEvent(matching: [.leftMouseUp, .leftMouseDragged])
-        event = anEvent!
-      }
-    }
-  }
-
-  func handleDragged(_ theEvent: NSEvent) {
-    var location = self.convert(theEvent.locationInWindow, from: nil)
-    location = self.convert(location, to: self.superview)
-
-    // swiftlint:disable identifier_name
-    let dx = (location.x - center.x) / center.x
-    let dy = (location.y - center.y) / center.y
-    // swiftlint:enable identifier_name
-
-    var angle = atan(dy / dx)
-
-    if dx < 0 {
-      angle -= .pi
-    }
-
-    var progress = (self.progress - self.progress.truncatingRemainder(dividingBy: 1)) + -(angle - .pi / 2) / (.pi * 2)
-
-    if self.progress - progress > 0.25 {
-      progress += 1
-    } else if progress - self.progress > 0.75 {
-      progress -= 1
-    }
-
-    if progress < 0 {
-      progress = 0
-    }
-
-    let progressNumber = NSNumber(value: Float(progress) as Float)
-
-    _ = self.target?.perform(self.action, with: progressNumber)
-  }
-
-  func handleUp(_ theEvent: NSEvent) {
-    if let selector = self.actionMouseUp {
-      _ = self.target?.perform(selector)
-    }
-  }
+//  override func mouseDown(with theEvent: NSEvent) {
+//      print("mouseDown 2?")
+//    var isDragging = false
+//    var isTracking = true
+//    var event: NSEvent = theEvent
+//
+//    while isTracking {
+//      switch event.type {
+//      case .leftMouseUp:
+//        isTracking = false
+//        self.handleUp(event)
+//        break
+//
+//      case .leftMouseDragged:
+//        if isDragging {
+//          self.handleDragged(event)
+//        } else {
+//          isDragging = true
+//        }
+//        break
+//
+//      default:
+//        break
+//      }
+//
+//      if isTracking {
+//        let anEvent = self.window?.nextEvent(matching: [.leftMouseUp, .leftMouseDragged])
+//        event = anEvent!
+//      }
+//    }
+//  }
+//
+//  func handleDragged(_ theEvent: NSEvent) {
+//      print("handleDragged")
+//    var location = self.convert(theEvent.locationInWindow, from: nil)
+//    location = self.convert(location, to: self.superview)
+//
+//    // swiftlint:disable identifier_name
+//    let dx = (location.x - center.x) / center.x
+//    let dy = (location.y - center.y) / center.y
+//    // swiftlint:enable identifier_name
+//
+//    var angle = atan(dy / dx)
+//
+//    if dx < 0 {
+//      angle -= .pi
+//    }
+//
+//    var progress = (self.progress - self.progress.truncatingRemainder(dividingBy: 1)) + -(angle - .pi / 2) / (.pi * 2)
+//
+//    if self.progress - progress > 0.25 {
+//      progress += 1
+//    } else if progress - self.progress > 0.75 {
+//      progress -= 1
+//    }
+//
+//    if progress < 0 {
+//      progress = 0
+//    }
+//
+//    let progressNumber = NSNumber(value: Float(progress) as Float)
+//
+//    _ = self.target?.perform(self.action, with: progressNumber)
+//  }
+//
+//  func handleUp(_ theEvent: NSEvent) {
+//    if let selector = self.actionMouseUp {
+//      _ = self.target?.perform(selector)
+//    }
+//  }
 
   @objc func windowFocusChanged(_ notification: Notification) {
     self.needsDisplay = true
   }
+//    override func hitTest(_ aPoint: NSPoint) -> NSView? {
+//      nil
+//    }
 }
 
 class MVClockFaceView: NSView {
